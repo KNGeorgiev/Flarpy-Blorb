@@ -1,23 +1,25 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
-    // This function will be called when the Start button is clicked
-    public void StartGame()
-    {
-        // Find and destroy the BackgroundMusic GameObject to stop the music
-        GameObject backgroundMusic = GameObject.Find("BackgroundMusic");
-        if (backgroundMusic != null)
-        {
-            Destroy(backgroundMusic); // This will stop the music
-        }
+    public Text highScoreText; // Assign this in the Inspector
 
-        // Load the main game scene (replace "GameWorldScene" with your actual scene name)
-        SceneManager.LoadScene("GameWorldScene");
+    void Start()
+    {
+        int highScore = PlayerPrefs.GetInt("HighScore", 0);
+        highScoreText.text = "High Score: " + highScore.ToString();
     }
 
-    // Detect spacebar press to start game from the main menu
+    public void StartGame()
+    {
+        GameObject backgroundMusic = GameObject.Find("BackgroundMusic");
+        if (backgroundMusic != null) Destroy(backgroundMusic);
+
+        SceneManager.LoadScene("GameWorldScene"); // Replace with your actual game scene name
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -26,10 +28,9 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    // This function will be called when the Exit button is clicked
     public void ExitGame()
     {
-        Debug.Log("Game is exiting"); // This line will show in the console during testing
+        Debug.Log("Game is exiting");
         Application.Quit();
     }
 }

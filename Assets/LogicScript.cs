@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class LogicScript : MonoBehaviour
 {
     public int playerScore;
+    public int highScore;
     public Text scoreText;
     public GameObject gameOverScreen;
     public GameObject pauseMenuScreen;
@@ -22,97 +23,85 @@ public class LogicScript : MonoBehaviour
         pauseMenuScreen.SetActive(false);
         Time.timeScale = 1f; // Ensure the game is running at full speed
 
-        // Set up the game state (do not handle main menu logic here)
+        // Initialize high score and game state
         gameStarted = true;
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
     }
 
     void Update()
     {
         if (gameStarted)
         {
-            // Check for Escape key press to toggle pause during gameplay
+            // Check for Escape key press to toggle pause
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (isPaused)
-                {
-                    ResumeGame();
-                }
-                else
-                {
-                    PauseGame();
-                }
+                if (isPaused) ResumeGame();
+                else PauseGame();
             }
 
-            // Allow pressing Space to resume from pause menu as well
+            // Allow pressing Space to resume from pause menu
             if (isPaused && Input.GetKeyDown(KeyCode.Space))
             {
                 ResumeGame();
             }
 
-            // Wait for spacebar to restart the game if game is over
+            // Restart game if game over screen is active and Space is pressed
             if (gameOverScreen.activeSelf && Input.GetKeyDown(KeyCode.Space))
             {
-                RestartGame();
+                restartGame();
             }
         }
-    }
-
-    public void StartGame()
-    {
-        gameStarted = true;
-        Time.timeScale = 1f; // Unfreeze the game
-        gameOverScreen.SetActive(false); // Hide game over screen
     }
 
     public void addScore()
     {
         playerScore += 1;
         scoreText.text = playerScore.ToString();
-        if (scoreAudioSource != null)
+        if (scoreAudioSource != null) scoreAudioSource.Play();
+    }
+
+    public void UpdateHighScore()
+    {
+        if (playerScore > highScore)
         {
-            scoreAudioSource.Play();
-            Debug.Log("Score sound played.");
+            highScore = playerScore;
+            PlayerPrefs.SetInt("HighScore", highScore);
+            PlayerPrefs.Save();
+            Debug.Log("New high score saved: " + highScore);
         }
+    }
+
+    public void gameOver()
+    {
+        UpdateHighScore();  // Update high score before showing game over screen
+        gameOverScreen.SetActive(true);
+        isPaused = false;  // Allow player to decide to restart
     }
 
     public void restartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Reload the scene to restart
-    }
-
-    // Show the Game Over screen and wait for space to restart the game
-    public void gameOver()
-    {
-        gameOverScreen.SetActive(true);  // Show game over screen
-        isPaused = false;  // Do not pause the game, let it run while the player decides to restart
+        playerScore = 0;  // Reset score
+        scoreText.text = playerScore.ToString();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Reload the scene
     }
 
     public void PauseGame()
     {
         pauseMenuScreen.SetActive(true);
-        Time.timeScale = 0f;  // Pause the game time
+        Time.timeScale = 0f;
         isPaused = true;
     }
 
     public void ResumeGame()
     {
         pauseMenuScreen.SetActive(false);
-        Time.timeScale = 1f;  // Resume the game
+        Time.timeScale = 1f;
         isPaused = false;
     }
 
     public void ReturnToMainMenu()
     {
-        Time.timeScale = 1f;  // Ensure the game time is normal before switching scenes
+        Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenuScene");
-    }
-
-    // This method restarts the game (called when space is pressed after game over)
-    private void RestartGame()
-    {
-        playerScore = 0;  // Reset score (optional)
-        scoreText.text = playerScore.ToString();
-        gameStarted = false;  // Reset gameStarted flag
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Reload the scene to restart the game
     }
 }
